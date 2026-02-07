@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors - AI Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #2a2a2a;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            max-width: 800px;
+            width: 100%;
+            border: 1px solid #3a3a3a;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 30px;
+            font-size: 2em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .btn-primary:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: #4a4a4a;
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a3a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 74, 74, 0.4);
+        }
+
+        .btn-danger {
+            background: #6a6a6a;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background: #5a5a5a;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto 30px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #webcam, #uploaded-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        #uploaded-image {
+            display: none;
+        }
+
+        .gestures {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .gesture-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: #1a1a1a;
+            transition: all 0.3s;
+            min-width: 120px;
+            border: 2px solid #4a4a4a;
+        }
+
+        .gesture-item.active {
+            background: #ffffff;
+            border-color: #ffffff;
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.5);
+        }
+
+        .emoji {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .gesture-label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .gesture-item.active .gesture-label {
+            color: #000000;
+        }
+
+        .confidence {
+            font-size: 0.9em;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+
+        .gesture-item.active .confidence {
+            color: #000000;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            font-weight: 500;
+            color: #e0e0e0;
+            border: 1px solid #3a3a3a;
+        }
+
+        .status.error {
+            background: #2a2a2a;
+            color: #ff6b6b;
+            border-color: #4a4a4a;
+        }
+
+        .status.success {
+            background: #2a2a2a;
+            color: #ffffff;
+            border-color: #5a5a5a;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #ffffff;
+        }
+
+        @media (max-width: 600px) {
+            .gestures {
+                gap: 10px;
+            }
+            
+            .gesture-item {
+                min-width: 80px;
+                padding: 15px;
+            }
+            
+            .emoji {
+                font-size: 3em;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rock Paper Scissors</h1>
+        
+        <div class="controls">
+            <button class="btn-primary" id="start-webcam" disabled>Activar Cámara</button>
+            <button class="btn-secondary" id="upload-btn" disabled>Subir Archivo</button>
+            <button class="btn-danger" id="stop-webcam" style="display: none;">Detener Cámara</button>
+            <input type="file" id="file-input" accept="image/*">
+        </div>
+
+        <div id="loading" class="loading">
+            Cargando modelo de IA...
+        </div>
+
+        <div class="video-container">
+            <video id="webcam" autoplay playsinline></video>
+            <img id="uploaded-image" alt="Imagen subida">
+        </div>
+
+        <div class="gestures">
+            <div class="gesture-item" data-gesture="Rock">
+                <div class="emoji">✊</div>
+                <div class="gesture-label">Rock</div>
+                <div class="confidence"></div>
+            </div>
+            <div class="gesture-item" data-gesture="Paper">
+                <div class="emoji">✋</div>
+                <div class="gesture-label">Paper</div>
+                <div class="confidence"></div>
+            </div>
+            <div class="gesture-item" data-gesture="Scissor">
+                <div class="emoji">✌️</div>
+                <div class="gesture-label">Scissor</div>
+                <div class="confidence"></div>
+            </div>
+        </div>
+
+        <div class="status" id="status">
+            Iniciando aplicación...
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    
+    <script>
+        // Ruta al modelo local (en la carpeta "model")
+        const MODEL_PATH = "./model/";
+        
+        let model, maxPredictions;
+        let isWebcamActive = false;
+        let animationId;
+
+        const startWebcamBtn = document.getElementById('start-webcam');
+        const stopWebcamBtn = document.getElementById('stop-webcam');
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileInput = document.getElementById('file-input');
+        const webcamElement = document.getElementById('webcam');
+        const uploadedImage = document.getElementById('uploaded-image');
+        const statusElement = document.getElementById('status');
+        const loadingElement = document.getElementById('loading');
+
+        // Cargar el modelo LOCAL
+        async function loadModel() {
+            try {
+                loadingElement.style.display = 'block';
+                statusElement.textContent = 'Cargando modelo de IA...';
+                statusElement.className = 'status';
+                
+                const modelURL = MODEL_PATH + "model.json";
+                const metadataURL = MODEL_PATH + "metadata.json";
+
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+                
+                loadingElement.style.display = 'none';
+                statusElement.textContent = 'Modelo cargado. ¡Listo para usar!';
+                statusElement.className = 'status success';
+                
+                // Habilitar botones
+                startWebcamBtn.disabled = false;
+                uploadBtn.disabled = false;
+                
+            } catch (error) {
+                loadingElement.style.display = 'none';
+                statusElement.textContent = 'Error al cargar el modelo: ' + error.message + '. Asegúrate de tener la carpeta "model" con los archivos correctos.';
+                statusElement.className = 'status error';
+                console.error('Error detallado:', error);
+            }
+        }
+
+        // Iniciar webcam
+        async function startWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user' } 
+                });
+                
+                webcamElement.srcObject = stream;
+                webcamElement.style.display = 'block';
+                uploadedImage.style.display = 'none';
+                isWebcamActive = true;
+                
+                startWebcamBtn.style.display = 'none';
+                stopWebcamBtn.style.display = 'inline-block';
+                
+                statusElement.textContent = 'Cámara activa - Mostrando predicciones en tiempo real';
+                statusElement.className = 'status success';
+                
+                // Esperar a que el video esté listo
+                webcamElement.addEventListener('loadeddata', () => {
+                    predictWebcam();
+                });
+            } catch (error) {
+                statusElement.textContent = 'Error al acceder a la cámara: ' + error.message;
+                statusElement.className = 'status error';
+            }
+        }
+
+        // Detener webcam
+        function stopWebcam() {
+            if (webcamElement.srcObject) {
+                const tracks = webcamElement.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                webcamElement.srcObject = null;
+            }
+            
+            isWebcamActive = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            startWebcamBtn.style.display = 'inline-block';
+            stopWebcamBtn.style.display = 'none';
+            
+            clearActiveGesture();
+            statusElement.textContent = 'Cámara detenida';
+            statusElement.className = 'status';
+        }
+
+        // Predicción continua con webcam
+        async function predictWebcam() {
+            if (!isWebcamActive) return;
+            
+            const prediction = await model.predict(webcamElement);
+            updateGestureDisplay(prediction);
+            
+            animationId = requestAnimationFrame(predictWebcam);
+        }
+
+        // Manejar subida de archivo
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Detener webcam si está activa
+            if (isWebcamActive) {
+                stopWebcam();
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                uploadedImage.src = e.target.result;
+                uploadedImage.style.display = 'block';
+                webcamElement.style.display = 'none';
+                
+                statusElement.textContent = 'Analizando imagen...';
+                statusElement.className = 'status';
+                
+                // Esperar a que la imagen cargue
+                uploadedImage.onload = async () => {
+                    const prediction = await model.predict(uploadedImage);
+                    updateGestureDisplay(prediction);
+                    statusElement.textContent = 'Imagen analizada';
+                    statusElement.className = 'status success';
+                };
+            };
+            reader.readAsDataURL(file);
+            
+            // Limpiar el input para permitir subir la misma imagen nuevamente
+            fileInput.value = '';
+        });
+
+        // Actualizar display de gestos
+        function updateGestureDisplay(predictions) {
+            // Encontrar la predicción con mayor probabilidad
+            let maxProb = 0;
+            let detectedGesture = null;
+            
+            predictions.forEach(pred => {
+                if (pred.probability > maxProb) {
+                    maxProb = pred.probability;
+                    detectedGesture = pred.className;
+                }
+            });
+
+            // Limpiar gestos activos
+            clearActiveGesture();
+
+            // Actualizar todas las confianzas
+            predictions.forEach(pred => {
+                const gestureElement = document.querySelector(`[data-gesture="${pred.className}"]`);
+                if (gestureElement) {
+                    const confidenceElement = gestureElement.querySelector('.confidence');
+                    const percentage = (pred.probability * 100).toFixed(1);
+                    confidenceElement.textContent = `${percentage}%`;
+                }
+            });
+
+            // Activar el gesto detectado (con un umbral de confianza del 50%)
+            if (maxProb > 0.5) {
+                const gestureElement = document.querySelector(`[data-gesture="${detectedGesture}"]`);
+                if (gestureElement) {
+                    gestureElement.classList.add('active');
+                }
+            }
+        }
+
+        // Limpiar gesto activo
+        function clearActiveGesture() {
+            document.querySelectorAll('.gesture-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+
+        // Event listeners
+        startWebcamBtn.addEventListener('click', startWebcam);
+        stopWebcamBtn.addEventListener('click', stopWebcam);
+        uploadBtn.addEventListener('click', () => fileInput.click());
+
+        // Cargar modelo al inicio
+        loadModel();
+    </script>
+</body>
+</html>
